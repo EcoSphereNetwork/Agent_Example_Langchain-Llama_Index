@@ -4,14 +4,19 @@
 # Prompt
 I've assembled a collection of agent code examples from two sources: Llama_Index and Langchain cookbook. Your task is to create individual agents based on each example in this collection. Follow these guidelines:
 
-    Develop a separate agent for each example in the list.
-    Save each agent's code in its own distinct file.
-    After completing an agent's code, push it to the GitHub repository before starting on the next one.
-    Utilize only the tools and frameworks specified in the examples.
-    Implement all code in Python.
-    Ensure that your implementation adheres to the following token limits:
-        Maximum Requests per minute (RPM): 50
-        Maximum Tokens per minute (TPM): 40,000
+    - Develop a separate agent for each example in the list.
+    
+    - Save each agent's code in its own distinct file.
+    
+    - After completing an agent's code, push it to the GitHub repository before starting on the next one.
+    
+    - Utilize only the tools and frameworks specified in the examples.
+    
+    - Implement all code in Python.
+    
+    - Ensure that your implementation adheres to the following token limits:
+         Maximum Requests per minute (RPM): 50
+         Maximum Tokens per minute (TPM): 40,000
 
 You can access the code examples at:
 
