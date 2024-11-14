@@ -1,29 +1,61 @@
 # Agent_Example_Langchain-Llama_Index
 
+This repository contains examples of agents created using Llama_Index and Langchain. The first implemented agent is a simplified version of the SECinsights agent.
 
-# Prompt
-I've assembled a collection of agent code examples from two sources: Llama_Index and Langchain cookbook. Your task is to create individual agents based on each example in this collection. Follow these guidelines:
+## SECinsights Agent
 
-    - Develop a separate agent for each example in the list.
-    
-    - Save each agent's code in its own distinct file.
-    
-    - After completing an agent's code, push it to the GitHub repository before starting on the next one.
-    
-    - Utilize only the tools and frameworks specified in the examples.
-    
-    - Implement all code in Python.
-    
-    - Ensure that your implementation adheres to the following token limits:
-         Maximum Requests per minute (RPM): 50
-         Maximum Tokens per minute (TPM): 40,000
+The SECinsights agent is a simplified version of the original SECinsights project. It uses LlamaIndex to create a searchable index of documents and provides a query endpoint.
 
-You can access the code examples at:
+### Setup
 
-    Llama_Index: https://github.com/run-llama/llama_index.git
-    Langchain cookbook: https://github.com/langchain-ai/langchain/tree/master/cookbook
+1. Install the required dependencies:
+   ```
+   pip install fastapi uvicorn llama-index sqlalchemy psycopg2-binary
+   ```
 
-Proceed systematically through the list, ensuring each agent is fully implemented, complies with the specified token limits, and is pushed to the repository before moving to the next.
+2. Set up your PostgreSQL database and update the `DATABASE_URL` in the `settings` object.
+
+3. Create a `data` directory in the same folder as the script and add your documents to it.
+
+### Running the Agent
+
+1. Start the FastAPI server:
+   ```
+   python sec_insights_agent.py
+   ```
+
+2. The server will start running on `http://localhost:8000`.
+
+### Usage
+
+To query the documents, send a POST request to the `/query` endpoint:
+
+```
+curl -X POST "http://localhost:8000/query" -H "Content-Type: application/json" -d '{"query": "Your query here"}'
+```
+
+The response will contain the answer based on the information in the indexed documents.
+
+### Note
+
+This is a simplified version of the SECinsights agent. For more advanced features and configurations, please refer to the original SECinsights project.
+
+## Original Task
+
+The original task was to create individual agents based on examples from Llama_Index and Langchain cookbook. The implementation should follow these guidelines:
+
+- Develop a separate agent for each example in the list.
+- Save each agent's code in its own distinct file.
+- After completing an agent's code, push it to the GitHub repository before starting on the next one.
+- Utilize only the tools and frameworks specified in the examples.
+- Implement all code in Python.
+- Ensure that the implementation adheres to the following token limits:
+  - Maximum Requests per minute (RPM): 50
+  - Maximum Tokens per minute (TPM): 40,000
+
+The code examples can be accessed at:
+- Llama_Index: https://github.com/run-llama/llama_index.git
+- Langchain cookbook: https://github.com/langchain-ai/langchain/tree/master/cookbook
 ## Definiere Tools
 
 **Language**
