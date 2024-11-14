@@ -3,14 +3,35 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.embeddings.openai import OpenAIEmbeddings
 from langchain_community.vectorstores import FAISS
 from langchain.prompts import ChatPromptTemplate, PromptTemplate
-from langchain_community.chat_models import ChatOpenAI
-from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain.tools import Tool
 from langchain.agents import create_openai_functions_agent
+from langchain_core.output_parsers import StrOutputParser, JsonOutputParser
 from langchain_core.runnables import RunnableParallel
 from langchain.memory import ConversationBufferMemory
+import requests
 
-# --- 1. SETUP LANGCHAIN DOCUMENT DATABASE ---
+# --- 1. SETUP LM-STUDIO API WRAPPER ---
+class LMStudioWrapper:
+    def __init__(self, endpoint_url: str, api_key: str = None):
+        self.endpoint_url = endpoint_url
+        self.api_key = api_key
+
+    def call_model(self, prompt: str, temperature: float = 0.2):
+        headers = {"Authorization": f"Bearer {self.api_key}"} if self.api_key else {}
+        payload = {
+            "prompt": prompt,
+            "temperature": temperature,
+            "max_tokens": 1000,
+            "stop": None,
+        }
+        response = requests.post(self.endpoint_url, headers=headers, json=payload)
+        response.raise_for_status()
+        return response.json()["choices"][0]["text"]
+
+# Initialize LM-Studio API wrapper
+lm_studio_model = LMStudioWrapper(endpoint_url="http://localhost:8000/api/v1/completions")
+
+# --- 2. SETUP LANGCHAIN DOCUMENT DATABASE ---
 def setup_langchain_docs_vectorstore(doc_path):
     loader = DirectoryLoader(doc_path, glob="**/*.txt")
     documents = loader.load()
@@ -27,7 +48,7 @@ def setup_langchain_docs_vectorstore(doc_path):
 vectorstore = FAISS.load_local("langchain_docs_faiss", OpenAIEmbeddings())
 retriever = vectorstore.as_retriever(search_kwargs={"k": 10})
 
-# --- 2. RAG AGENT ---
+# --- 3. RAG AGENT ---
 rag_template = """
 Use the provided LangChain documentation context to answer the query. Be comprehensive and provide actionable insights.
 
@@ -38,18 +59,14 @@ Query:
 {query}
 """
 
-rag_prompt = ChatPromptTemplate.from_template(rag_template)
-model = ChatOpenAI(temperature=0.2, model="gpt-4")
-output_parser = StrOutputParser()
-
 def run_rag_agent(query):
-    context = retriever.get_relevant_documents(query)
-    context_text = "\n".join([doc.page_content for doc in context])
-    rag_chain = rag_prompt | model | output_parser
-    response = rag_chain.invoke({"context": context_text, "query": query})
+    context_docs = retriever.get_relevant_documents(query)
+    context_text = "\n".join([doc.page_content for doc in context_docs])
+    prompt = rag_template.format(context=context_text, query=query)
+    response = lm_studio_model.call_model(prompt)
     return response
 
-# --- 3. CODE-GENERATION AGENT ---
+# --- 4. CODE-GENERATION AGENT ---
 code_gen_template = """
 Write Python code for a LangChain agent with the following specifications:
 1. Tools: {tools}
@@ -60,20 +77,12 @@ Write Python code for a LangChain agent with the following specifications:
 Provide complete and executable Python code.
 """
 
-code_gen_prompt = PromptTemplate.from_template(code_gen_template)
-code_gen_parser = JsonOutputParser()
-
 def run_code_gen_agent(tools, memory, behavior, features):
-    input_data = {
-        "tools": tools,
-        "memory": memory,
-        "behavior": behavior,
-        "features": features
-    }
-    chain = code_gen_prompt | model | code_gen_parser
-    return chain.invoke(input_data)
+    prompt = code_gen_template.format(tools=tools, memory=memory, behavior=behavior, features=features)
+    response = lm_studio_model.call_model(prompt)
+    return response
 
-# --- 4. CRITICAL REVIEW AGENT ---
+# --- 5. CRITICAL REVIEW AGENT ---
 review_template = """
 Review the following Python code for correctness, completeness, and alignment with LangChain standards:
 {code}
@@ -81,45 +90,54 @@ Review the following Python code for correctness, completeness, and alignment wi
 Provide a list of issues and suggestions.
 """
 
-review_prompt = ChatPromptTemplate.from_template(review_template)
+revision_template = """
+Revise the following Python code based on the feedback:
+Code:
+{code}
+
+Feedback:
+{feedback}
+
+Provide the revised code.
+"""
 
 def review_and_revise_code(code):
-    review_chain = review_prompt | model | output_parser
-    feedback = review_chain.invoke({"code": code})
-
-    # If issues are found, revise the code
+    review_prompt = review_template.format(code=code)
+    feedback = lm_studio_model.call_model(review_prompt)
     if "issue" in feedback.lower():
-        revision_prompt = ChatPromptTemplate.from_template(
-            "Revise the following code based on this feedback:\n\nCode:\n{code}\n\nFeedback:\n{feedback}"
-        )
-        revise_chain = revision_prompt | model | output_parser
-        revised_code = revise_chain.invoke({"code": code, "feedback": feedback})
+        revision_prompt = revision_template.format(code=code, feedback=feedback)
+        revised_code = lm_studio_model.call_model(revision_prompt)
         return revised_code
     return code
 
-# --- 5. SUPERVISOR AGENT ---
+# --- 6. SUPERVISOR AGENT ---
 rag_tool = Tool(name="RAG", func=run_rag_agent, description="Retrieve LangChain documentation.")
-code_tool = Tool(name="CodeGen", func=run_code_gen_agent, description="Generate agents.")
-review_tool = Tool(name="Review", func=review_and_revise_code, description="Review and revise code.")
+code_tool = Tool(name="CodeGen", func=run_code_gen_agent, description="Generate LangChain agents.")
+review_tool = Tool(name="Review", func=review_and_revise_code, description="Review and revise Python code.")
 
 tools = [rag_tool, code_tool, review_tool]
 
 supervisor_prompt = ChatPromptTemplate.from_template(
     "Orchestrate tools dynamically to generate, review, and finalize a LangChain agent based on user requirements."
 )
-supervisor_agent = create_openai_functions_agent(llm=model, tools=tools, prompt=supervisor_prompt)
 
-# --- 6. SHARED MEMORY ---
+def supervisor_agent(input_query, tools, memory, behavior, features):
+    rag_response = run_rag_agent(input_query)
+    code_response = run_code_gen_agent(tools, memory, behavior, features)
+    reviewed_code = review_and_revise_code(code_response)
+    return reviewed_code
+
+# --- 7. SHARED MEMORY ---
 shared_memory = ConversationBufferMemory()
 
-# --- 7. PARALLEL PROCESSING ---
+# --- 8. PARALLEL PROCESSING ---
 parallel_agents = RunnableParallel(
     rag=lambda x: run_rag_agent(x["query"]),
     code_gen=lambda x: run_code_gen_agent(x["tools"], x["memory"], x["behavior"], x["features"]),
     review=lambda x: review_and_revise_code(x["code"])
 )
 
-# --- 8. END-TO-END WORKFLOW ---
+# --- 9. END-TO-END WORKFLOW ---
 def full_workflow(query, tools, memory, behavior, features):
     shared_memory.save_context({"input": query}, {"output": "Starting workflow..."})
 
