@@ -1,10 +1,14 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "axios";
+import { io } from "socket.io-client";
+
+const socket = io("http://localhost:5000");
 
 function App() {
   const [query, setQuery] = useState("");
   const [response, setResponse] = useState("");
   const [logs, setLogs] = useState([]);
+  const [realTimeLogs, setRealTimeLogs] = useState([]);
 
   const handleQuery = async () => {
     try {
@@ -24,6 +28,13 @@ function App() {
       console.error("Error:", err);
     }
   };
+
+  useEffect(() => {
+    socket.on("log_update", (data) => {
+      setRealTimeLogs((prev) => [...prev, { file: data.file, lines: data.lines }]);
+    });
+    return () => socket.disconnect();
+  }, []);
 
   return (
     <div style={{ padding: "20px" }}>
@@ -49,6 +60,15 @@ function App() {
       <pre style={{ backgroundColor: "#f4f4f4", padding: "10px", overflowX: "auto" }}>
         {JSON.stringify(logs, null, 2)}
       </pre>
+      <h2>Real-Time Log Updates:</h2>
+      {realTimeLogs.map((log, index) => (
+        <div key={index}>
+          <h4>File: {log.file}</h4>
+          <pre style={{ backgroundColor: "#f4f4f4", padding: "10px", overflowX: "auto" }}>
+            {log.lines.join("")}
+          </pre>
+        </div>
+      ))}
     </div>
   );
 }
