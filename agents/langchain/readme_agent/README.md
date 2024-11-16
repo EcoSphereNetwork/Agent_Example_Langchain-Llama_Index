@@ -1,9 +1,12 @@
 
-Enhanced README Generator 🚀✨
-📖 Description
+# Enhanced README Generator 🚀✨
+
+
+## 📖 Description
 
 The Enhanced README Generator is a powerful Python-based tool for creating detailed and professional README.md files for GitHub repositories. This agent integrates seamlessly with the GitHub API, parses dependencies from project files, previews Markdown, supports custom sections, and provides an interactive web-based editor for fine-tuning your README.
-📂 Features
+
+## 📂 Features
 
     GitHub API Integration
 
@@ -22,40 +25,41 @@ The Enhanced README Generator is a powerful Python-based tool for creating detai
     Interactive Editing
         Fine-tune the README with a web-based editor for ultimate customization.
 
-🛠️ Installation
+# 🛠️ Installation
 
-    Clone the repository:
+Clone the repository:
 
-git clone https://github.com/your_username/enhanced-readme-generator.git
-cd enhanced-readme-generator
+    git clone https://github.com/your_username/enhanced-readme-generator.git
+    cd enhanced-readme-generator
 
 Install the required dependencies:
 
     pip install -r requirements.txt
 
-    Set up your GitHub API token:
-        Generate a personal access token from GitHub Developer Settings.
-        Use this token when running the agent.
+Set up your GitHub API token:
+    Generate a personal access token from GitHub Developer Settings.
+    Use this token when running the agent.
 
-🚀 Usage
+## 🚀 Usage
+
 CLI Mode
 
 Generate a README.md directly from the command line:
 
-python enhanced_readme_generator.py --repo /path/to/repo \
-    --github-token YOUR_GITHUB_TOKEN \
-    --repo-name USER/REPO \
-    --branch-name readme-update \
-    --template detailed
+    python enhanced_readme_generator.py --repo /path/to/repo \
+        --github-token YOUR_GITHUB_TOKEN \
+        --repo-name USER/REPO \
+        --branch-name readme-update \
+        --template detailed
 
 Web-Based Editor
 
 Launch the interactive editor to customize your README:
 
-python enhanced_readme_generator.py
+    python enhanced_readme_generator.py
 
-    Visit http://localhost:5000 in your browser.
-    Edit and save the README.md file.
+    # Visit http://localhost:5000 in your browser.
+    # Edit and save the README.md file.
 
 Markdown Preview
 
@@ -72,14 +76,14 @@ Markdown Preview
 
 We welcome contributions! Here’s how you can help:
 
-    Fork this repository.
-    Create a new branch:
+Fork this repository.
+Create a new branch:
 
-git checkout -b feature/your-feature-name
+    git checkout -b feature/your-feature-name
 
 Make your changes and commit:
 
-git commit -m "Add a new feature"
+    git commit -m "Add a new feature"
 
 Push to your branch:
 
