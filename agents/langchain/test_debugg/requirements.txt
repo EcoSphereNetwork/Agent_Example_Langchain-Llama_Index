@@ -1,0 +1,9 @@
+flask
+flask-cors
+flask-socketio
+requests
+loguru
+watchdog
+langchain
+langchain-community
+sqlite3
