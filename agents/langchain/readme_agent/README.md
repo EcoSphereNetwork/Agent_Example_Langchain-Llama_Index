@@ -8,20 +8,20 @@ The Enhanced README Generator is a powerful Python-based tool for creating detai
 
 ## 📂 Features
 
-- **GitHub API Integration**
+- **GitHub API Integration:**
     Automatically fetch repository details (name, description, languages, etc.).
     Create pull requests to update or add a README file.
 
-- **Automatic Dependency Parsing**
+- **Automatic Dependency Parsing:**
     Extract dependencies from requirements.txt (Python) and package.json (Node.js).
 
-- **Markdown Preview**
+- **Markdown Preview:**
     View a live preview in the terminal or browser before saving.
 
-- **Custom Sections**
+- **Custom Sections:**
     Add FAQs, Acknowledgements, Changelog, or any additional sections.
 
-- **Interactive Editing**
+- **Interactive Editing:**
     Fine-tune the README with a web-based editor for ultimate customization.
 
 # 🛠️ Installation
